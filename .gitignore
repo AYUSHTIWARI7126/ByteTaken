@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+incidents.jsonl
+# Windows-only USB driver binary; download from the vendor instead
+drivers/
+# Official event material marked confidential; keep local only
+reference/FirmGen Hands On Lab.pdf

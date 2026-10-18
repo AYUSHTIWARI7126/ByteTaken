@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GuardianBand Console</title>
+<style>
+  :root {
+    --bg: #0f1419; --panel: #1a2129; --text: #e6edf3; --muted: #8b98a5; --line: #2b3540;
+    --ok: #2ea043; --warn: #d29922; --alert: #f85149; --sos: #db61a2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 20px; }
+  header span { color: var(--muted); font-size: 13px; }
+  main { padding: 20px 24px; display: grid; gap: 20px; max-width: 1100px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-left: 8px solid var(--ok); border-radius: 10px; padding: 18px 20px; }
+  .card.FALL_SUSPECTED { border-left-color: var(--warn); }
+  .card.FALL_CONFIRMED { border-left-color: var(--alert); animation: pulse 1s infinite; }
+  .card.SOS { border-left-color: var(--sos); animation: pulse 1s infinite; }
+  .card.offline { opacity: .5; }
+  @keyframes pulse { 50% { background: #3a1d22; } }
+  .name { font-size: 14px; color: var(--muted); }
+  .state { font-size: 30px; font-weight: 700; margin: 4px 0 10px; letter-spacing: .5px; }
+  .NORMAL .state { color: var(--ok); } .FALL_SUSPECTED .state { color: var(--warn); }
+  .FALL_CONFIRMED .state { color: var(--alert); } .SOS .state { color: var(--sos); }
+  .meta { display: grid; grid-template-columns: repeat(4, auto); gap: 4px 16px; font-size: 13px; color: var(--muted); }
+  .meta b { color: var(--text); font-weight: 600; display: block; font-size: 15px; }
+  .empty { color: var(--muted); padding: 30px; text-align: center; border: 1px dashed var(--line); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--panel); border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  h2 { margin: 0 0 8px; font-size: 15px; color: var(--muted); font-weight: 600; }
+  @media (max-width: 500px) { header, main { padding-left: 16px; padding-right: 16px; } .meta { grid-template-columns: repeat(2, auto); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>GuardianBand Caregiver Console</h1>
+  <span>Live BLE advertisements · no pairing · firmware generated with CraftifAI FirmGen</span>
+</header>
+<main>
+  <div class="cards" id="cards"><div class="empty">Waiting for GuardianBand advertisements…</div></div>
+  <section>
+    <h2>Incident log</h2>
+    <table><thead><tr><th>Time</th><th>Device</th><th>Change</th><th>Events</th><th>Peak</th><th>RSSI</th></tr></thead>
+    <tbody id="log"></tbody></table>
+  </section>
+</main>
+<script>
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const label = { NORMAL: "NORMAL", FALL_SUSPECTED: "FALL? (cancel window)", FALL_CONFIRMED: "FALL — HELP NEEDED", SOS: "SOS — HELP NEEDED" };
+async function refresh() {
+  try {
+    const { devices, incidents } = await (await fetch("/api/state")).json();
+    const cards = document.getElementById("cards");
+    cards.innerHTML = devices.length ? devices.map(d => `
+      <div class="card ${esc(d.state)} ${d.online ? "" : "offline"}">
+        <div class="name">${esc(d.name)} · ${esc(d.address)}${d.online ? "" : " · OFFLINE"}</div>
+        <div class="state">${esc(label[d.state] || d.state)}</div>
+        <div class="meta">
+          <div>Events<b>${d.events}</b></div><div>Last impact<b>${d.peak_g.toFixed(1)} g</b></div>
+          <div>RSSI<b>${d.rssi} dBm</b></div><div>Uptime<b>${Math.floor(d.uptime_s / 60)}m ${d.uptime_s % 60}s</b></div>
+        </div>
+      </div>`).join("") : `<div class="empty">Waiting for GuardianBand advertisements…</div>`;
+    document.getElementById("log").innerHTML = incidents.map(i => `
+      <tr><td>${esc(i.time.slice(11))}</td><td>${esc(i.device)}</td><td>${esc(i.from)} → <b>${esc(i.to)}</b></td>
+      <td>${i.events}</td><td>${i.peak_g.toFixed(1)} g</td><td>${i.rssi}</td></tr>`).join("");
+    const alerting = devices.some(d => d.online && (d.state === "FALL_CONFIRMED" || d.state === "SOS"));
+    document.title = alerting ? "🚨 ALERT — GuardianBand" : "GuardianBand Console";
+  } catch (e) { /* console restarting; try again next tick */ }
+}
+refresh();
+setInterval(refresh, 500);
+</script>
+</body>
+</html>
