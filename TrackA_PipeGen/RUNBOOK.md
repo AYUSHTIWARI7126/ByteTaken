@@ -86,7 +86,7 @@ You need **two** USB drives: one 8 GB+ stick for the installer, and the external
 4. **Test videos (keep them under /home, as PipeGen requires):**
    - Record 2–3 phone videos (30–60 s, landscape, phone held still) of people walking across a room. Make one where someone walks into a corner you'll call the "hazard zone", and one with nobody in the zone. Copy them to `~/videos/`.
    - If DeepStream installs with PipeGen, also copy its sample: `cp /opt/nvidia/deepstream/deepstream/samples/streams/sample_720p.mp4 ~/videos/`
-5. Create an empty public GitHub repo `safezone-pipegen` on https://github.com/new (the PipeGen export folder goes there).
+5. Repo: https://github.com/AYUSHTIWARI7126/ByteTaken (already created; the PipeGen export folder is added to it on the day).
 
 ✅ **Done tonight when:** `pipegen --version` prints 0.5.1, `XDG_SESSION_TYPE=x11`, `nvidia-smi` works, mosquitto echoes, and the videos are in `~/videos`.
 
@@ -145,15 +145,21 @@ Re-run. 📹 **Record a phone video**: a person walks in, the screen boxes turn 
 ### 14:30: Edge Optimization bonus
 Run the INT8 engine live. Screenshot PipeGen's FP16 vs INT8 comparison (speed/power/accuracy). Write one sentence on the trade-off.
 
-### 15:00: Push the PipeGen export folder to GitHub
+### 15:00: Push the PipeGen export folder + evidence to GitHub
+Ayush first adds the friend as a collaborator: repo **Settings → Collaborators → Add people**.
+The friend accepts the email invite and uses their own GitHub username + a
+**personal access token** (GitHub → Settings → Developer settings → Tokens) as the password.
 ```bash
-cd <pipegen export folder>
-git init && git add . && git commit -m "SafeZone PipeGen export"
-git branch -M main
-git remote add origin https://github.com/AYUSHTIWARI7126/safezone-pipegen.git
-git push -u origin main
+cd ~/ByteTaken && git pull
+cp -r <pipegen export folder> pipegen_export      # the folder PipeGen exported (run.sh, configs, reports)
+mkdir -p evidence && cp ~/Pictures/*.png evidence/ 2>/dev/null   # screenshots
+find pipegen_export -size +90M                    # GitHub rejects files >100 MB (e.g. .engine / big videos)
+git add pipegen_export evidence
+git commit -m "Add PipeGen export and evidence"
+git push
 ```
-Also copy `TrackA_PipeGen/` (the console) into the repo as `console/` and push again. Put the screenshots and videos in an `evidence/` folder.
+If `find` lists big files (TensorRT `.engine` files, long videos), delete them from the copy before `git add`.
+They're rebuilt by PipeGen anyway; keep the speed reports and configs.
 
 ### 15:20: Submit
 Fill in `SUBMISSION.md` and paste it into https://forms.gle/eJyeCKCG2UH757QZ8. **Submit by 15:45.**

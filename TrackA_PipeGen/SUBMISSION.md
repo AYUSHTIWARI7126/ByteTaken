@@ -10,7 +10,7 @@
 
 **Bonus targeted:** Edge Optimization (INT8 TensorRT engine vs FP16) [[delete if not achieved]]
 
-**Repository:** https://github.com/AYUSHTIWARI7126/safezone-pipegen (PipeGen export folder + console + evidence)
+**Repository:** https://github.com/AYUSHTIWARI7126/ByteTaken (PipeGen export folder + console + evidence)
 
 ---
 
