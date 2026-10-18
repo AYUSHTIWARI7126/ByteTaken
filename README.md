@@ -1,4 +1,4 @@
-# Embedded SF: CraftifAI Physical AI Hackathon · deadline 4:00 pm
+# Embedded SF: CraftifAI Physical AI Hackathon · deadline 6:00 pm
 
 ## Quick start on the PipeGen laptop (Fedora/Ubuntu + NVIDIA GPU)
 ```bash
